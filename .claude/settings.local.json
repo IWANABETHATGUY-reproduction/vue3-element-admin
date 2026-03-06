@@ -1,0 +1,13 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(grep -oP '`[^`]+`')",
+      "Bash(awk 'NR>=28 && NR<=699 && /^\\\\| `/' unused-modules-report.md)",
+      "Bash(sed 's/| `\\\\\\([^`]*\\\\\\)`.*/\\\\1/')",
+      "Bash(npx vite build)",
+      "Bash(npx vue-tsc --noEmit)",
+      "Bash(pnpm build)",
+      "Bash(ls -la dist/js/index.* dist/css/index.*)"
+    ]
+  }
+}
