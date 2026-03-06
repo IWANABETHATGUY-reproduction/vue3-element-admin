@@ -210,14 +210,15 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
           chunkFileNames: "js/[name].[hash].js",
           // 用于输出静态资源的命名，[ext]表示文件扩展名
           assetFileNames: (assetInfo: any) => {
-            const info = assetInfo.name.split(".");
+            const name = assetInfo.name ?? assetInfo.names?.[0] ?? "";
+            const info = name.split(".");
             let extType = info[info.length - 1];
             // console.log('文件信息', assetInfo.name)
-            if (/\.(mp4|webm|ogg|mp3|wav|flac|aac)(\?.*)?$/i.test(assetInfo.name)) {
+            if (/\.(mp4|webm|ogg|mp3|wav|flac|aac)(\?.*)?$/i.test(name)) {
               extType = "media";
-            } else if (/\.(png|jpe?g|gif|svg)(\?.*)?$/.test(assetInfo.name)) {
+            } else if (/\.(png|jpe?g|gif|svg)(\?.*)?$/.test(name)) {
               extType = "img";
-            } else if (/\.(woff2?|eot|ttf|otf)(\?.*)?$/i.test(assetInfo.name)) {
+            } else if (/\.(woff2?|eot|ttf|otf)(\?.*)?$/i.test(name)) {
               extType = "fonts";
             }
             return `${extType}/[name].[hash].[ext]`;
