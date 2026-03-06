@@ -198,7 +198,8 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
     build: {
       chunkSizeWarningLimit: 2000, // 消除打包大小超过500kb警告
       reportCompressedSize: false,
-      minify: isProduction ? "esbuild" : false, // 只在生产环境启用压缩
+      sourcemap: true,
+      minify: isProduction,
       rollupOptions: {
         output: {
           // manualChunks: {
