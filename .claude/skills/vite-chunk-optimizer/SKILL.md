@@ -24,6 +24,8 @@ A slow page usually means the browser is downloading and parsing more JavaScript
 
 Follow these steps in order. Each step builds on the previous one — don't skip the diagnosis phase, because applying optimizations blindly can make things worse (e.g., creating too many small chunks adds HTTP overhead).
 
+**Important:** Before executing each step, print a log message to the user in the format: `[Step N/8] <description>` — e.g., `[Step 1/8] Understanding which page is slow...`. This keeps the user informed of progress.
+
 ### Step 1: Understand which page is slow
 
 Ask the user which page or route feels slow if they haven't said. Find out:
@@ -34,12 +36,51 @@ Dev mode slowness is usually Vite's on-demand transform pipeline (different prob
 
 ### Step 2: Check for Chrome coverage data
 
-Ask the user: **Do you have a Chrome DevTools coverage JSON export from a production build with sourcemaps enabled? If so, please provide the file path.**
+Ask the user: **Do you have a Chrome DevTools coverage JSON export from a production build? If so, please provide the file path.**
 
 Wait for the user to answer before proceeding.
 
-- If the user provides a file path: use the coverage data combined with sourcemaps to map bundled chunks back to original source files. This reveals which source files are eagerly loaded on the entry page, enabling more targeted optimizations — e.g., deferring files that aren't actually needed at initial load.
 - If the user says no or skips: proceed to Step 3.
+- If the user provides a file path: proceed to **Step 2b** below.
+
+### Step 2b: Sourcemap + coverage analysis (CRITICAL — do not skip)
+
+**Why this matters:** Chunk-level coverage (which chunks loaded, what % was used) is NOT enough. A single chunk can contain dozens of modules. Without sourcemaps, you can only see "this 800 KB chunk was 20% used on the Login page" — but you can't tell WHICH modules inside it are evaluated vs dead weight. With sourcemaps, you can map coverage byte-ranges back to **individual source modules** and answer:
+
+- Which specific modules inside a shared chunk are actually **evaluated** on the target page?
+- Which modules are just along for the ride because they share a chunk with something needed?
+- Which store/utility/library modules does the page actually execute vs merely download?
+
+This is the difference between guessing from the import graph and **knowing exactly** what the browser evaluates.
+
+**Steps:**
+
+1. **Enable sourcemaps** — Verify `build.sourcemap` is set to `true` in `vite.config.ts` (or `.js`, `.mjs`). If not, enable it:
+   ```ts
+   build: {
+     sourcemap: true,
+   }
+   ```
+
+2. **Rebuild with sourcemaps** — Run `npx vite build`. This generates `.js.map` files alongside each chunk.
+
+3. **Have the user re-collect coverage** — The coverage JSON must be collected from a build that has sourcemaps. If the existing coverage was collected from a build without sourcemaps, ask the user to:
+   - Run `npx vite preview` (or serve the `dist/` folder)
+   - Open Chrome DevTools → Sources → Coverage → Start → Load the slow page → Stop → Export JSON
+
+4. **Map coverage to source modules** — For each JS entry in the coverage JSON:
+   - The `url` field identifies the chunk (e.g., `style.abc123.js`)
+   - The `ranges` array contains byte offsets of code that was **actually evaluated**
+   - Load the corresponding `.js.map` sourcemap file
+   - Use the sourcemap to translate each coverage range's byte offsets back to original source file paths and line numbers
+   - This tells you exactly which source modules were evaluated
+
+5. **Identify optimization targets** — From the mapped data, look for:
+   - Large modules that are **in the chunk but never evaluated** on the target page → candidates for lazy loading or splitting into a separate chunk
+   - Modules from `node_modules` that are evaluated but only needed by other pages → candidates for `manualChunks` or deferred imports
+   - Store/utility modules that are pulled into a shared chunk but only used post-login → candidates for lazy initialization
+
+**This analysis directly informs Steps 6-7.** The fixes you apply should target the specific modules identified here, not just chunk-level heuristics.
 
 ### Step 3: Analyze the current build output
 
@@ -75,7 +116,7 @@ Routes that use **static imports** (`import Page from './Page'`) get bundled int
 
 ### Step 6: Identify the specific problem
 
-Based on Steps 3-5, classify the issue:
+Based on Steps 2b-5, classify the issue. If you have sourcemap + coverage data from Step 2b, use the **module-level** evaluation data as your primary signal — it tells you exactly which modules are loaded but not needed on the target page. If you only have chunk-level data, use the import graph analysis from Steps 3-5 as a fallback, but be aware this is less precise:
 
 **Problem A: Routes not lazy-loaded**
 → Convert static route imports to dynamic imports. This is the highest-impact fix.

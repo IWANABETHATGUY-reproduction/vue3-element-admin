@@ -9,7 +9,10 @@
       "Bash(pnpm build)",
       "Bash(ls -la dist/js/index.* dist/css/index.*)",
       "Bash(timeout 15 npx vite:*)",
-      "Bash(npx vite:*)"
+      "Bash(npx vite:*)",
+      "Bash(node:*)",
+      "Bash(rm:*)",
+      "Bash(python3:*)"
     ]
   }
 }
