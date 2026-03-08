@@ -201,9 +201,14 @@ export default defineConfig(({ mode }: ConfigEnv): UserConfig => {
       minify: isProduction,
       rollupOptions: {
         output: {
-          // manualChunks: {
-          //   "vue-i18n": ["vue-i18n"],
-          // },
+          manualChunks: (id) => {
+            if (id.includes("node_modules")) {
+              // Combine utils realted into one chunk
+              if (id.includes("codemirror") || id.includes("echarts")) {
+                return "vendor-codemirror-echarts";
+              }
+            }
+          },
           // 用于从入口点创建的块的打包输出格式[name]表示文件名,[hash]表示该文件内容hash值
           entryFileNames: "js/[name].[hash].js",
           // 用于命名代码拆分时创建的共享块的输出命名
