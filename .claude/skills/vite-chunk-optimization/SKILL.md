@@ -39,7 +39,7 @@ Dev mode slowness is usually Vite's on-demand transform pipeline (different prob
 
 Ask the user: **Do you have a Chrome DevTools coverage JSON export from a production build? If so, please provide the file path.**
 
-Wait for the user to answer before proceeding.
+**STOP HERE. Do NOT proceed to any subsequent steps, do NOT launch parallel agents, do NOT read config files or run builds. End your turn after asking this question and wait for the user's reply.**
 
 - If the user says no or skips: proceed to Step 3.
 - If the user provides a file path **OR you discover a coverage JSON file in the repo** (e.g., via git status, glob): proceed to **Step 2b** below.
