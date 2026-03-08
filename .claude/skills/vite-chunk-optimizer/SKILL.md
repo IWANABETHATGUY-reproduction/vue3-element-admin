@@ -19,7 +19,6 @@ A slow page usually means the browser is downloading and parsing more JavaScript
 - **No route-level code splitting** — all pages bundled into one giant file
 - **A single vendor chunk** containing every dependency, even ones only used by one page
 - **Eagerly imported heavy libraries** (chart libs, editors, PDF viewers) that should be loaded on demand
-- **Duplicated modules** appearing in multiple chunks because the bundler doesn't know they're shared
 
 ## Workflow
 
@@ -35,25 +34,31 @@ Dev mode slowness is usually Vite's on-demand transform pipeline (different prob
 
 ### Step 2: Analyze the current build output
 
-Run a production build and examine the output:
+Add Rolldown's `bundleAnalyzerPlugin` to the Vite config with `format: 'md'` to generate a markdown report:
 
-```bash
-npx vite build 2>&1 | tail -60
+```ts
+// vite.config.ts
+import { bundleAnalyzerPlugin } from 'rolldown/experimental'
+
+export default defineConfig({
+  plugins: [
+    bundleAnalyzerPlugin({
+      format: 'md',
+    }),
+  ],
+})
 ```
 
-Vite logs every chunk with its size. Look for:
-- Any chunk over **200 KB** (gzipped) — these are optimization targets
+Then run a production build:
+
+```bash
+npx vite build
+```
+
+Read the generated markdown report. Look for:
+- Not all chunks over **200 KB** are optimization targets — only focus on those reachable from the target page's entry chunk
 - The chunk names tell you what's in them (vendor, index, page names)
-
-If the project has a `stats.html` or uses a bundle visualizer plugin, open that instead — it gives a treemap of exactly what's inside each chunk.
-
-If neither exists, temporarily add the visualizer to get a clear picture:
-
-```bash
-npx vite-bundle-visualizer
-```
-
-This generates a treemap HTML file without modifying the project config.
+- Pay close attention to the **Suggestion** section in the report — it contains actionable optimization recommendations from Rolldown itself
 
 ### Step 3: Read the Vite config
 
