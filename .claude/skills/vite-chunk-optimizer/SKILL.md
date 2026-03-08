@@ -38,7 +38,7 @@ Ask the user: **Do you have a Chrome DevTools coverage JSON export from a produc
 
 Wait for the user to answer before proceeding.
 
-- If the user provides a file path: use the coverage data in later steps to identify exactly which code is unused on the target page, making optimization decisions more precise.
+- If the user provides a file path: use the coverage data combined with sourcemaps to map bundled chunks back to original source files. This reveals which source files are eagerly loaded on the entry page, enabling more targeted optimizations — e.g., deferring files that aren't actually needed at initial load.
 - If the user says no or skips: proceed to Step 3.
 
 ### Step 3: Analyze the current build output
