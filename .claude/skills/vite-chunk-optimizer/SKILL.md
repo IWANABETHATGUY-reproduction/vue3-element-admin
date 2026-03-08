@@ -4,7 +4,7 @@ description: >
   Diagnose and fix slow page loads in Vite projects by analyzing and optimizing chunk splitting.
   Use this skill whenever a user says a page is slow to load, takes too long to open, has a large
   bundle, or wants to optimize Vite build performance. Also trigger when users mention chunk size,
-  code splitting, lazy loading routes, or bundle optimization in a Vite/Rollup context — even if
+  code splitting, lazy loading routes, or bundle optimization in a Vite/Rolldown context — even if
   they don't say "chunk" explicitly. Works with any Vite framework (Vue, React, Svelte, Solid, etc.).
 ---
 
@@ -19,8 +19,7 @@ A slow page usually means the browser is downloading and parsing more JavaScript
 - **No route-level code splitting** — all pages bundled into one giant file
 - **A single vendor chunk** containing every dependency, even ones only used by one page
 - **Eagerly imported heavy libraries** (chart libs, editors, PDF viewers) that should be loaded on demand
-- **Barrel files** (`index.ts` re-exporting everything) that defeat tree-shaking
-- **Duplicated modules** appearing in multiple chunks because Rollup doesn't know they're shared
+- **Duplicated modules** appearing in multiple chunks because the bundler doesn't know they're shared
 
 ## Workflow
 
@@ -46,7 +45,7 @@ Vite logs every chunk with its size. Look for:
 - Any chunk over **200 KB** (gzipped) — these are optimization targets
 - The chunk names tell you what's in them (vendor, index, page names)
 
-If the project has a `stats.html` or uses `rollup-plugin-visualizer`, open that instead — it gives a treemap of exactly what's inside each chunk.
+If the project has a `stats.html` or uses a bundle visualizer plugin, open that instead — it gives a treemap of exactly what's inside each chunk.
 
 If neither exists, temporarily add the visualizer to get a clear picture:
 
@@ -59,7 +58,7 @@ This generates a treemap HTML file without modifying the project config.
 ### Step 3: Read the Vite config
 
 Read `vite.config.ts` (or `.js`, `.mjs`) and look for:
-- `build.rollupOptions.output.manualChunks` — existing chunk splitting rules
+- `build.rolldownOptions.output.manualChunks` — existing chunk splitting rules
 - `build.chunkSizeWarningLimit` — if raised, someone was hiding warnings instead of fixing them
 - Any plugins that affect bundling
 
@@ -89,11 +88,6 @@ Based on Steps 2-4, classify the issue:
 **Problem C: A heavy library loaded eagerly on one page**
 → Dynamic-import the library at the component level, not just the route level. For example, a chart library should only load when the chart component mounts.
 
-**Problem D: Duplicated modules across chunks**
-→ Extract shared modules into a common chunk so they're downloaded once.
-
-**Problem E: Barrel file pulling in everything**
-→ Replace barrel imports with direct file imports.
 
 ### Step 6: Apply targeted fixes
 
@@ -127,7 +121,7 @@ In `vite.config.ts`, add `manualChunks` to group dependencies logically:
 
 ```ts
 build: {
-  rollupOptions: {
+  rolldownOptions: {
     output: {
       manualChunks(id) {
         if (id.includes('node_modules')) {
@@ -172,22 +166,6 @@ const HeavyChart = defineAsyncComponent(() => import('./components/HeavyChart.vu
 ```tsx
 // React example
 const HeavyChart = lazy(() => import('./components/HeavyChart'))
-```
-
-#### Fix D: Extract shared chunks
-
-If the build shows the same module in multiple chunks, configure a minimum shared threshold:
-
-```ts
-build: {
-  rollupOptions: {
-    output: {
-      manualChunks(id) {
-        // ... existing rules
-      }
-    }
-  },
-}
 ```
 
 ### Step 7: Verify the improvement
