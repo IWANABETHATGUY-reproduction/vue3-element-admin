@@ -7,7 +7,9 @@
       "Bash(npx vite build)",
       "Bash(npx vue-tsc --noEmit)",
       "Bash(pnpm build)",
-      "Bash(ls -la dist/js/index.* dist/css/index.*)"
+      "Bash(ls -la dist/js/index.* dist/css/index.*)",
+      "Bash(timeout 15 npx vite:*)",
+      "Bash(npx vite:*)"
     ]
   }
 }

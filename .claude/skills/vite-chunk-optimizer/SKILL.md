@@ -32,24 +32,18 @@ Ask the user which page or route feels slow if they haven't said. Find out:
 
 Dev mode slowness is usually Vite's on-demand transform pipeline (different problem). This skill focuses on **production build** chunk optimization.
 
-### Step 2: Analyze the current build output
+### Step 2: Check for Chrome coverage data
 
-Add Rolldown's `bundleAnalyzerPlugin` to the Vite config with `format: 'md'` to generate a markdown report:
+Ask the user: **Do you have a Chrome DevTools coverage JSON export from a production build with sourcemaps enabled? If so, please provide the file path.**
 
-```ts
-// vite.config.ts
-import { bundleAnalyzerPlugin } from 'rolldown/experimental'
+Wait for the user to answer before proceeding.
 
-export default defineConfig({
-  plugins: [
-    bundleAnalyzerPlugin({
-      format: 'md',
-    }),
-  ],
-})
-```
+- If the user provides a file path: use the coverage data in later steps to identify exactly which code is unused on the target page, making optimization decisions more precise.
+- If the user says no or skips: proceed to Step 3.
 
-Then run a production build:
+### Step 3: Analyze the current build output
+
+run a production build:
 
 ```bash
 npx vite build
@@ -58,16 +52,15 @@ npx vite build
 Read the generated markdown report. Look for:
 - Not all chunks over **200 KB** are optimization targets — only focus on those reachable from the target page's entry chunk
 - The chunk names tell you what's in them (vendor, index, page names)
-- Pay close attention to the **Suggestion** section in the report — it contains actionable optimization recommendations from Rolldown itself
 
-### Step 3: Read the Vite config
+### Step 4: Read the Vite config
 
 Read `vite.config.ts` (or `.js`, `.mjs`) and look for:
 - `build.rolldownOptions.output.manualChunks` — existing chunk splitting rules
 - `build.chunkSizeWarningLimit` — if raised, someone was hiding warnings instead of fixing them
 - Any plugins that affect bundling
 
-### Step 4: Check route definitions for lazy loading
+### Step 5: Check route definitions for lazy loading
 
 Find the router config (common locations below) and check whether routes use dynamic imports:
 
@@ -80,9 +73,9 @@ Find the router config (common locations below) and check whether routes use dyn
 
 Routes that use **static imports** (`import Page from './Page'`) get bundled into the entry chunk — this is the most common cause of slow initial loads.
 
-### Step 5: Identify the specific problem
+### Step 6: Identify the specific problem
 
-Based on Steps 2-4, classify the issue:
+Based on Steps 3-5, classify the issue:
 
 **Problem A: Routes not lazy-loaded**
 → Convert static route imports to dynamic imports. This is the highest-impact fix.
@@ -94,7 +87,7 @@ Based on Steps 2-4, classify the issue:
 → Dynamic-import the library at the component level, not just the route level. For example, a chart library should only load when the chart component mounts.
 
 
-### Step 6: Apply targeted fixes
+### Step 7: Apply targeted fixes
 
 Apply only the fixes that match the diagnosed problems. Below are patterns for each.
 
@@ -173,7 +166,7 @@ const HeavyChart = defineAsyncComponent(() => import('./components/HeavyChart.vu
 const HeavyChart = lazy(() => import('./components/HeavyChart'))
 ```
 
-### Step 7: Verify the improvement
+### Step 8: Verify the improvement
 
 After applying fixes, rebuild and compare:
 
