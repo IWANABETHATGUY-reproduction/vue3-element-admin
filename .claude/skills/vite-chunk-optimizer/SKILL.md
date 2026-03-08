@@ -41,9 +41,11 @@ Ask the user: **Do you have a Chrome DevTools coverage JSON export from a produc
 Wait for the user to answer before proceeding.
 
 - If the user says no or skips: proceed to Step 3.
-- If the user provides a file path: proceed to **Step 2b** below.
+- If the user provides a file path **OR you discover a coverage JSON file in the repo** (e.g., via git status, glob): proceed to **Step 2b** below.
 
-### Step 2b: Sourcemap + coverage analysis (CRITICAL — do not skip)
+### Step 2b: Sourcemap + coverage analysis
+
+**BLOCKING GATE: When coverage data is available (user-provided or discovered in the repo), you MUST complete Step 2b in full before starting Steps 3, 4, 5, 6, or 7. Do NOT launch parallel agents or read other files to "get ahead" — the whole point is that 2b's output replaces guesswork. Any optimization applied without completing 2b first is guessing, not diagnosing.**
 
 **Why this matters:** Chunk-level coverage (which chunks loaded, what % was used) is NOT enough. A single chunk can contain dozens of modules. Without sourcemaps, you can only see "this 800 KB chunk was 20% used on the Login page" — but you can't tell WHICH modules inside it are evaluated vs dead weight. With sourcemaps, you can map coverage byte-ranges back to **individual source modules** and answer:
 
@@ -81,6 +83,8 @@ This is the difference between guessing from the import graph and **knowing exac
    - Store/utility modules that are pulled into a shared chunk but only used post-login → candidates for lazy initialization
 
 **This analysis directly informs Steps 6-7.** The fixes you apply should target the specific modules identified here, not just chunk-level heuristics.
+
+**After completing Step 2b:** proceed to Step 3. Steps 3-5 provide supplementary context (config, routes), but Step 2b's module-level data is the primary signal for deciding what to optimize. Do not contradict or ignore 2b's findings based on import-graph guesses from Steps 3-5.
 
 ### Step 3: Analyze the current build output
 

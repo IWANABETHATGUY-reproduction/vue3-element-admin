@@ -12,7 +12,10 @@
       "Bash(npx vite:*)",
       "Bash(node:*)",
       "Bash(rm:*)",
-      "Bash(python3:*)"
+      "Bash(python3:*)",
+      "Bash(python:*)",
+      "Bash(sort -t'|' -k2 -rn)",
+      "Bash(npm ls:*)"
     ]
   }
 }
