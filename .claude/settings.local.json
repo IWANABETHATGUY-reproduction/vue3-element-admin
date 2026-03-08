@@ -15,7 +15,11 @@
       "Bash(python3:*)",
       "Bash(python:*)",
       "Bash(sort -t'|' -k2 -rn)",
-      "Bash(npm ls:*)"
+      "Bash(npm ls:*)",
+      "Bash(find E:\\\\Documents\\\\rolldown-dir\\\\github\\\\vue3-element-admin\\\\src\\\\views\\\\login:*)",
+      "Bash(find E:\\\\Documents\\\\rolldown-dir\\\\github\\\\vue3-element-admin\\\\src:*)",
+      "Bash(ls:*)",
+      "Bash(wc:*)"
     ]
   }
 }
